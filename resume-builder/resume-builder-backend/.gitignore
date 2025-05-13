@@ -1,0 +1,99 @@
+const express = require("express");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
+
+const app = express();
+app.use(cors()); // Enable CORS to allow frontend requests
+app.use(express.json()); // Parse JSON request bodies
+
+// Store resume data in memory (for simplicity; use a database in production)
+let resumeData = null;
+
+// Endpoint to handle resume submission
+app.post("/submit", (req, res) => {
+  resumeData = req.body;
+  res.status(200).send("Resume saved to backend!");
+});
+
+// Endpoint to log resume data and return JSON
+app.post("/api/resume", (req, res) => {
+  console.log("Received resume data:", req.body);
+  res.status(200).json({ success: true, message: "Resume saved to API successfully" });
+});
+
+// Endpoint to generate and download PDF
+app.post("/generate-pdf", (req, res) => {
+  const data = req.body;
+  const doc = new PDFDocument();
+  const filePath = path.join(__dirname, "resume.pdf");
+
+  // Pipe the PDF into a file
+  doc.pipe(fs.createWriteStream(filePath));
+
+  // Add content to the PDF
+  doc.fontSize(20).text("Resume", { align: "center" });
+  doc.moveDown();
+
+  doc.fontSize(14).text("Personal Details", { underline: true });
+  doc.fontSize(12).text(`Name: ${data.name || "N/A"}`);
+  doc.text(`Phone: ${data.phone || "N/A"}`);
+  doc.text(`City: ${data.city || "N/A"}`);
+  doc.text(`Email: ${data.email || "N/A"}`);
+  doc.text(`LinkedIn: ${data.linkedin || "N/A"}`);
+  doc.text(`GitHub: ${data.github || "N/A"}`);
+  doc.moveDown();
+
+  doc.fontSize(14).text("Objective", { underline: true });
+  doc.fontSize(12).text(data.objective || "N/A");
+  doc.moveDown();
+
+  doc.fontSize(14).text("Education", { underline: true });
+  if (data.education && Array.isArray(data.education)) {
+    data.education.forEach((edu) => doc.fontSize(12).text(edu));
+  } else {
+    doc.text("N/A");
+  }
+  doc.moveDown();
+
+  doc.fontSize(14).text("Skills", { underline: true });
+  if (data.skills && Array.isArray(data.skills)) {
+    data.skills.forEach((skill) => doc.fontSize(12).text(skill));
+  } else {
+    doc.text("N/A");
+  }
+  doc.moveDown();
+
+  doc.fontSize(14).text("Experience", { underline: true });
+  if (data.experience && Array.isArray(data.experience)) {
+    data.experience.forEach((exp) => doc.fontSize(12).text(exp));
+  } else {
+    doc.text("N/A");
+  }
+  doc.moveDown();
+
+  doc.fontSize(14).text("Projects", { underline: true });
+  if (data.projects && Array.isArray(data.projects)) {
+    data.projects.forEach((project) => doc.fontSize(12).text(project));
+  } else {
+    doc.text("N/A");
+  }
+
+  doc.end();
+
+  // Send the PDF file as a response
+  res.download(filePath, "resume.pdf", (err) => {
+    if (err) {
+      console.error("Error sending PDF:", err);
+      res.status(500).send("Error generating PDF");
+    }
+    // Optionally, delete the file after sending
+    fs.unlinkSync(filePath);
+  });
+});
+
+const PORT = 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

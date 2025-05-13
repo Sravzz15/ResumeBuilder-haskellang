@@ -1,0 +1,31 @@
+/* src/styles/resumePreview.css */
+
+.preview-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+.button-container {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.resume {
+  max-width: 800px;
+  background: white;
+  padding: 30px;
+  margin: 0 auto;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.resume h1 {
+  margin-bottom: 5px;
+  font-size: 28px;
+}
+
+.resume p {
+  margin: 5px 0;
+  line-height: 1.6;
+}
+
